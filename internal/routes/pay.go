@@ -7,7 +7,17 @@ import (
 )
 
 func PayRouter(r chi.Router) {
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	payEntryRouter(r)
+}
+
+func payEntryRouter(r chi.Router) {
+	const route = "/entry"
+
+	r.Get(route, func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World!"))
 	})
+
+	r.Post(route, func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello, World!"))
+	}
 }
