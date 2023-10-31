@@ -15,9 +15,9 @@ func Init() {
 
 	r.Use(middleware.Logger)
 
-	r.Route("/house", routes.HouseRouter)
+	r.Route("/house", routes.House)
 
-	r.Route("/pay", routes.PayRouter)
+	r.Route("/pay", routes.Pay)
 
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		if _, err := w.Write([]byte("pong")); err != nil {

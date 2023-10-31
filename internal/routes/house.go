@@ -13,8 +13,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// HouseRouter is the router for the /house endpoint
-func HouseRouter(r chi.Router) {
+// House is the router for the /house endpoint
+func House(r chi.Router) {
 	coll := db.Database.Collection(schemas.HouseCollection)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
