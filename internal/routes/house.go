@@ -47,30 +47,30 @@ func HouseRouter(r chi.Router) {
 	})
 
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-		type Input struct {
+		type Body struct {
 			Name   string `json:"name"`
 			UserId string `json:"user_id"`
 		}
 
-		body, err := io.ReadAll(r.Body)
+		raw, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		var in Input
-		if err = json.Unmarshal(body, &in); err != nil {
+		var b Body
+		if err = json.Unmarshal(raw, &b); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		house, err := schemas.NewHouse(in.Name, in.UserId)
+		h, err := schemas.NewHouse(b.Name, b.UserId)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		newHouse, err := coll.InsertOne(db.Ctx, house)
+		newHouse, err := coll.InsertOne(db.Ctx, h)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -81,6 +81,7 @@ func HouseRouter(r chi.Router) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
 		if _, err = w.Write(res); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			panic(err)
