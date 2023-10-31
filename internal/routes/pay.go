@@ -19,5 +19,5 @@ func payEntryRouter(r chi.Router) {
 
 	r.Post(route, func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World!"))
-	}
+	})
 }

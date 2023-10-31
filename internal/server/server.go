@@ -15,7 +15,15 @@ func Init() {
 
 	r.Use(middleware.Logger)
 
+	r.Route("/house", routes.HouseRouter)
+
 	r.Route("/pay", routes.PayRouter)
+
+	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		if _, err := w.Write([]byte("pong")); err != nil {
+			return
+		}
+	})
 
 	err := http.ListenAndServe(":"+config.Env.Port, r)
 	if err != nil {
