@@ -28,7 +28,7 @@ func payEntry(r chi.Router) {
 	})
 }
 
-// payItem is the router for the /pay/item endpoint
+// payPeriod is the router for the /pay/item endpoint
 func payPeriod(r chi.Router) {
 	const route = "/period"
 	coll := db.Database.Collection(schemas.HouseCollection)
