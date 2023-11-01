@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/ourhouz/houz/internal/config"
 	"github.com/ourhouz/houz/internal/routes"
@@ -14,6 +15,8 @@ func Init() {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(3 * time.Second))
 
 	r.Route("/house", routes.House)
 

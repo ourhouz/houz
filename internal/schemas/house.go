@@ -9,32 +9,25 @@ import (
 const HouseCollection = "houses"
 
 type House struct {
-	Id         id          `bson:"_id" json:"_id"`
-	Name       string      `bson:"name" json:"name"`
-	Owner      id          `bson:"owner_id" json:"owner_id"`
-	UserIds    []id        `bson:"user_ids,omitempty" json:"user_ids,omitempty"`
-	PayPeriods []PayPeriod `bson:"pay_periods,omitempty" json:"pay_periods,omitempty"`
+	Id         Id          `json:"_id"`
+	Name       string      `json:"name"`
+	Owner      Id          `json:"owner_id"`
+	UserIds    []Id        `json:"user_ids"`
+	PayPeriods []PayPeriod `json:"pay_periods"`
 }
 
 // NewHouse creates a new house with the given name and owner ID
-func NewHouse(name, owner string) (House, error) {
+func NewHouse(name string, owner Id) (House, error) {
 	if name == "" {
 		return House{}, errors.New("house name is required")
 	}
-	if owner == "" {
-		return House{}, errors.New("owner ID is required")
-	}
-
-	ownerId, err := primitive.ObjectIDFromHex(owner)
-	if err != nil {
-		return House{}, err
-	}
 
 	return House{
+		Id:    primitive.NewObjectID(),
 		Name:  name,
-		Owner: ownerId,
-		UserIds: []id{
-			ownerId,
+		Owner: owner,
+		UserIds: []Id{
+			owner,
 		},
 		PayPeriods: []PayPeriod{},
 	}, nil

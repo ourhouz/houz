@@ -2,15 +2,13 @@ package routes
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/ourhouz/houz/internal/db"
 	"github.com/ourhouz/houz/internal/schemas"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
-	"github.com/go-chi/chi/v5"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // House is the router for the /house endpoint
@@ -19,16 +17,15 @@ func House(r chi.Router) {
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
-		house := q.Get("house_id")
 
-		houseId, err := primitive.ObjectIDFromHex(house)
+		id, err := primitive.ObjectIDFromHex(q.Get("house_id"))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		var h schemas.House
-		err = coll.FindOne(db.Ctx, bson.M{"_id": houseId}).Decode(&h)
+		err = coll.FindOne(r.Context(), bson.M{"_id": id}).Decode(&h)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -47,19 +44,13 @@ func House(r chi.Router) {
 	})
 
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-		type Body struct {
-			Name   string `json:"name"`
-			UserId string `json:"user_id"`
+		type RequestBody struct {
+			Name   string     `json:"name"`
+			UserId schemas.Id `json:"user_id"`
 		}
 
-		raw, err := io.ReadAll(r.Body)
+		b, err := parseBody[RequestBody](r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		var b Body
-		if err = json.Unmarshal(raw, &b); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -70,13 +61,13 @@ func House(r chi.Router) {
 			return
 		}
 
-		newHouse, err := coll.InsertOne(db.Ctx, h)
+		_, err = coll.InsertOne(r.Context(), h)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		res, err := json.Marshal(newHouse)
+		res, err := json.Marshal(h)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
