@@ -15,6 +15,8 @@ type PayItem struct {
 	UserIdToDue map[Id]Cost `json:"person_to_dues"`
 }
 
+// TODO: NewPayItem (?)
+
 type PayEntry struct {
 	Id          Id          `json:"_id"`
 	Time        Timestamp   `json:"Timestamp"`
@@ -25,6 +27,8 @@ type PayEntry struct {
 	Items       []Id        `json:"item_ids"`
 	UserIdToDue map[Id]Cost `json:"person_to_dues"`
 }
+
+// TODO: NewPayEntry
 
 type PayPeriod struct {
 	Id          Id          `json:"_id"`
