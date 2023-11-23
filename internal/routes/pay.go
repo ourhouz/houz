@@ -53,11 +53,7 @@ func Pay(r chi.Router) {
 				return
 			}
 
-			p, err := schemas.NewPayPeriod(b.Start)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
+			p := schemas.NewPayPeriod(b.Start)
 
 			_, err = coll.UpdateOne(
 				r.Context(),

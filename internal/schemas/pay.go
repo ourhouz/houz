@@ -15,7 +15,11 @@ type PayItem struct {
 	UserIdToDue map[Id]Cost `json:"person_to_dues"`
 }
 
-// TODO: NewPayItem (?)
+func NewPayItem() PayItem {
+	return PayItem{
+		Id: primitive.NewObjectID(),
+	}
+}
 
 type PayEntry struct {
 	Id          Id          `json:"_id"`
@@ -28,23 +32,27 @@ type PayEntry struct {
 	UserIdToDue map[Id]Cost `json:"person_to_dues"`
 }
 
-// TODO: NewPayEntry
+func NewPayEntry() PayEntry {
+	return PayEntry{
+		Id: primitive.NewObjectID(),
+	}
+}
 
 type PayPeriod struct {
 	Id          Id          `json:"_id"`
 	Start       Timestamp   `json:"start"`
 	End         Timestamp   `json:"end,omitempty"`
 	Completed   bool        `json:"completed"`
-	Entries     []PayEntry  `json:"entry_ids"`
+	EntryIds    []Id        `json:"entry_ids"`
 	UserIdToDue map[Id]Cost `json:"person_to_dues"`
 }
 
-func NewPayPeriod(start int64) (PayPeriod, error) {
+func NewPayPeriod(start int64) PayPeriod {
 	return PayPeriod{
 		Id:          primitive.NewObjectID(),
 		Start:       Timestamp(start),
 		Completed:   false,
-		Entries:     []PayEntry{},
-		UserIdToDue: map[Id]Cost{},
-	}, nil
+		EntryIds:    make([]Id, 0),
+		UserIdToDue: make(map[Id]Cost),
+	}
 }
