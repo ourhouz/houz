@@ -7,9 +7,8 @@ import (
 )
 
 type Config struct {
-	Port         string
-	MongoURI     string
-	MongoCluster string
+	Port        string
+	PostgresDSN string
 }
 
 var Env Config
@@ -20,8 +19,7 @@ func Load() {
 	}
 
 	Env = Config{
-		Port:         os.Getenv("PORT"),
-		MongoURI:     os.Getenv("MONGO_URI"),
-		MongoCluster: os.Getenv("MONGO_CLUSTER"),
+		Port:        os.Getenv("PORT"),
+		PostgresDSN: os.Getenv("POSTGRES_DSN"),
 	}
 }

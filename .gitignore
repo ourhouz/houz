@@ -1,8 +1,1 @@
-.DS_store
-.idea
-.vscode
-.env
-
-internal/db
-redis
-build
+./postgres
