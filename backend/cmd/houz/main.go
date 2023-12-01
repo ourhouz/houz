@@ -8,6 +8,9 @@ import (
 
 func main() {
 	config.Load()
+
 	db.Connect()
+	db.Init()
+
 	server.Init()
 }

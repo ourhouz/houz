@@ -1,9 +1,10 @@
 package db
 
 import (
-	"github.com/ourhouz/houz/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"github.com/ourhouz/houz/internal/config"
 )
 
 var Database *gorm.DB = nil
@@ -18,4 +19,17 @@ func Connect() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func Init() {
+	err := Database.AutoMigrate(&User{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = Database.AutoMigrate(&House{})
+	if err != nil {
+		panic(err)
+	}
+
 }

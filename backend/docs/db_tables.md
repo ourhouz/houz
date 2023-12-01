@@ -14,26 +14,15 @@ CREATE TABLE Houses (
 ```
 
 ### Users
-A user is a single member of a house(s). A user can be in multiple houses. 
+A user is a single member of a house(s). A user cannot be in multiple houses (a user is created after joining a house). 
 
 ```postgresql
 CREATE TABLE Users (
-    UserId          SERIAL,
+    HouseId         INTEGER,
     Username        VARCHAR(100),
     -- and other authentication related columns
-    PRIMARY KEY (UserId),
-);
-```
-
-### HouseMates
-Serves as a junction/join table between `Houses` and `Users` (many-to-many relationship).
-
-```postgresql
-CREATE TABLE HouseMates (
-    HouseId         INTEGER,
-    UserId          INTEGER,
+    PRIMARY KEY (HouseId, Username),
     FOREIGN KEY (HouseId) REFERENCES Houses (HouseId),
-    FOREIGN KEY (UserId) REFERENCES Users (UserId),
 );
 ```
 

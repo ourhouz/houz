@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Port        string
 	PostgresDSN string
+	JWTKey      []byte
 }
 
 var Env Config
@@ -21,5 +22,6 @@ func Load() {
 	Env = Config{
 		Port:        os.Getenv("PORT"),
 		PostgresDSN: os.Getenv("POSTGRES_DSN"),
+		JWTKey:      []byte(os.Getenv("JWT_KEY")),
 	}
 }

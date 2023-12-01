@@ -22,3 +22,18 @@ func parseBody[T any](r *http.Request) (T, error) {
 
 	return b, nil
 }
+
+// writeJson marshals data as JSON and sends the bytes as the response body
+func writeJson(w http.ResponseWriter, data interface{}) {
+	res, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if _, err = w.Write(res); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
