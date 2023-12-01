@@ -51,7 +51,31 @@ func House(r chi.Router) {
 			return
 		}
 
-		_, user, err := createHouse(body.HouseName, body.Username, body.Password)
+		if len(body.HouseName) == 0 {
+			err = errors.New("house name cannot be empty")
+			return
+		}
+		if len(body.HouseName) > 100 {
+			err = errors.New("house name cannot be longer than 100 characters")
+			return
+		}
+
+		house := db.House{
+			Name: body.HouseName,
+		}
+
+		hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+		user := db.User{
+			Name:         body.Username,
+			PasswordHash: hash,
+			HouseId:      house.ID,
+		}
+
+		house.Owner = user
+		house.Housemates = append(house.Housemates, user)
+
+		db.Database.Create(&house)
+		db.Database.Create(&user)
 
 		t, err := auth.CreateUserJWT(user)
 		if err != nil {
@@ -62,34 +86,4 @@ func House(r chi.Router) {
 		w.Header().Add("Authorization", "Bearer "+t)
 		w.WriteHeader(http.StatusCreated)
 	})
-}
-
-func createHouse(houseName, username, password string) (house db.House, user db.User, err error) {
-	if len(houseName) == 0 {
-		err = errors.New("house name cannot be empty")
-		return
-	}
-	if len(houseName) > 100 {
-		err = errors.New("house name cannot be longer than 100 characters")
-		return
-	}
-
-	house = db.House{
-		Name: houseName,
-	}
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	user = db.User{
-		Name:         username,
-		PasswordHash: hash,
-		HouseId:      house.ID,
-	}
-
-	house.Owner = user
-	house.Housemates = append(house.Housemates, user)
-
-	db.Database.Create(&house)
-	db.Database.Create(&user)
-
-	return
 }

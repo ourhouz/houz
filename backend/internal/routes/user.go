@@ -26,11 +26,39 @@ func User(r chi.Router) {
 			return
 		}
 
-		user, err := joinHouse(body.HouseId, body.Name, body.Password)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if len(body.Name) == 0 {
+			err = errors.New("name cannot be empty")
 			return
 		}
+		if len(body.Name) > 72 {
+			// bcrypt limit
+			err = errors.New("name cannot be longer than 72 characters")
+			return
+		}
+
+		result := db.Database.Where("id = ?", body.HouseId).Take(&db.House{})
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			err = errors.New("house with id " + strconv.Itoa(int(body.HouseId)) + " doesn't exist")
+			return
+		}
+
+		var user db.User
+		result = db.Database.Where(&db.User{
+			HouseId: body.HouseId,
+			Name:    body.Name,
+		}).Take(&user)
+		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			err = errors.New("user with name " + body.Name + " already exists")
+			return
+		}
+
+		hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+		user = db.User{
+			Name:         body.Name,
+			PasswordHash: hash,
+			HouseId:      body.HouseId,
+		}
+		db.Database.Create(&user)
 
 		t, err := auth.CreateUserJWT(user)
 		if err != nil {
@@ -80,41 +108,4 @@ func User(r chi.Router) {
 		w.Header().Add("Authorization", "Bearer "+t)
 		w.WriteHeader(http.StatusCreated)
 	})
-}
-
-func joinHouse(houseId uint, name, password string) (user db.User, err error) {
-	if len(name) == 0 {
-		err = errors.New("name cannot be empty")
-		return
-	}
-	if len(name) > 72 {
-		// bcrypt limit
-		err = errors.New("name cannot be longer than 72 characters")
-		return
-	}
-
-	result := db.Database.Where("id = ?", houseId).Take(&db.House{})
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		err = errors.New("house with id " + strconv.Itoa(int(houseId)) + " doesn't exist")
-		return
-	}
-
-	result = db.Database.Where(&db.User{
-		HouseId: houseId,
-		Name:    name,
-	}).Take(&user)
-	if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		err = errors.New("user with name " + name + " already exists")
-		return
-	}
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	user = db.User{
-		Name:         name,
-		PasswordHash: hash,
-		HouseId:      houseId,
-	}
-	db.Database.Create(&user)
-
-	return
 }
