@@ -22,14 +22,19 @@ func Connect() {
 }
 
 func Init() {
-	err := Database.AutoMigrate(&User{})
-	if err != nil {
-		panic(err)
+	models := []interface{}{
+		&User{},
+		&House{},
+		&PayPeriod{},
+		&PayEntry{},
+		&PayItem{},
+		&PayItemDue{},
 	}
 
-	err = Database.AutoMigrate(&House{})
-	if err != nil {
-		panic(err)
+	for _, model := range models {
+		err := Database.AutoMigrate(model)
+		if err != nil {
+			panic(err)
+		}
 	}
-
 }

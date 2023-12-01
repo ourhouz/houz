@@ -35,6 +35,12 @@ func House(r chi.Router) {
 			return
 		}
 
+		err = db.Database.Model(&house).Association("PayPeriods").Find(&house.PayPeriods)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		writeJson(w, house)
 	})
 
@@ -68,7 +74,7 @@ func House(r chi.Router) {
 		user := db.User{
 			Name:         body.Username,
 			PasswordHash: hash,
-			HouseId:      house.ID,
+			HouseID:      house.ID,
 		}
 
 		house.Owner = user

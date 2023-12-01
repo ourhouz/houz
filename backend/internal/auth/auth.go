@@ -44,7 +44,7 @@ type claims struct {
 
 func CreateUserJWT(user db.User) (s string, err error) {
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims{
-		user.HouseId,
+		user.HouseID,
 		user.Name,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
@@ -76,7 +76,7 @@ func VerifyUserJWT(s string) (user db.User, house db.House, err error) {
 	}
 
 	result = db.Database.Where(&db.User{
-		HouseId: c.HouseId,
+		HouseID: c.HouseId,
 		Name:    c.Name,
 	}).First(&user)
 	if result.RowsAffected == 0 {

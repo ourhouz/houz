@@ -44,7 +44,7 @@ func User(r chi.Router) {
 
 		var user db.User
 		result = db.Database.Where(&db.User{
-			HouseId: body.HouseId,
+			HouseID: body.HouseId,
 			Name:    body.Name,
 		}).Take(&user)
 		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -56,7 +56,7 @@ func User(r chi.Router) {
 		user = db.User{
 			Name:         body.Name,
 			PasswordHash: hash,
-			HouseId:      body.HouseId,
+			HouseID:      body.HouseId,
 		}
 		db.Database.Create(&user)
 
@@ -85,7 +85,7 @@ func User(r chi.Router) {
 
 		var user db.User
 		result := db.Database.Where(&db.User{
-			HouseId: body.HouseId,
+			HouseID: body.HouseId,
 			Name:    body.Name,
 		}).First(&user)
 		if result.RowsAffected == 0 {

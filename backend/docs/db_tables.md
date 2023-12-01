@@ -52,7 +52,6 @@ A pay entry contains metadata on a single payment.
 CREATE TABLE PayEntries (
     PayEntryId      SERIAL,
     PayPeriodId     INTEGER,
-    StartTime       TIMESTAMPTZ,
     Location        VARCHAR(100),
     Description     VARCHAR(500),
     TotalCost       REAL,
@@ -85,7 +84,7 @@ A pay due relates a pay item with a user.
 CREATE TABLE PayDues (
     PayItemId       INTEGER,
     UserId          INTEGER,
-    TotalCost       REAL,   
+    AmountDue       REAL,   
     FOREIGN KEY (PayItemId) REFERENCES PayItems (PayItemId),
     FOREIGN KEY (UserId) REFERENCES Users (UserId),
 );
