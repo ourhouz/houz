@@ -1,1 +1,5 @@
-./postgres
+.DS_store
+.idea
+.vscode
+
+/postgres
