@@ -1,4 +1,4 @@
-package routes
+package server
 
 import (
 	"errors"
@@ -6,21 +6,18 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/ourhouz/houz/internal/auth"
 	"github.com/ourhouz/houz/internal/db"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-func User(r chi.Router) {
+func userRouter(r chi.Router) {
 	r.Post("/create", func(w http.ResponseWriter, r *http.Request) {
-		type RequestBody struct {
+		body, err := parseBody[struct {
 			HouseId  uint   `json:"house_id"`
 			Name     string `json:"name"`
 			Password string `json:"password"`
-		}
-
-		body, err := parseBody[RequestBody](r)
+		}](r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -38,7 +35,7 @@ func User(r chi.Router) {
 
 		result := db.Database.Where("id = ?", body.HouseId).Take(&db.House{})
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			err = errors.New("house with id " + strconv.Itoa(int(body.HouseId)) + " doesn't exist")
+			err = errors.New("houseRouter with id " + strconv.Itoa(int(body.HouseId)) + " doesn't exist")
 			return
 		}
 
@@ -48,7 +45,7 @@ func User(r chi.Router) {
 			Name:    body.Name,
 		}).Take(&user)
 		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			err = errors.New("user with name " + body.Name + " already exists")
+			err = errors.New("userRouter with name " + body.Name + " already exists")
 			return
 		}
 
@@ -60,24 +57,17 @@ func User(r chi.Router) {
 		}
 		db.Database.Create(&user)
 
-		t, err := auth.CreateUserJWT(user)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		writeUserJWT(w, user)
 
-		w.Header().Add("Authorization", "Bearer "+t)
 		w.WriteHeader(http.StatusCreated)
 	})
 
 	r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
-		type RequestBody struct {
+		body, err := parseBody[struct {
 			HouseId  uint   `json:"house_id"`
 			Name     string `json:"name"`
 			Password string `json:"password"`
-		}
-
-		body, err := parseBody[RequestBody](r)
+		}](r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -89,7 +79,7 @@ func User(r chi.Router) {
 			Name:    body.Name,
 		}).First(&user)
 		if result.RowsAffected == 0 {
-			http.Error(w, "User doesn't exist", http.StatusBadRequest)
+			http.Error(w, "userRouter doesn't exist", http.StatusBadRequest)
 			return
 		}
 
@@ -99,13 +89,8 @@ func User(r chi.Router) {
 			return
 		}
 
-		t, err := auth.CreateUserJWT(user)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		writeUserJWT(w, user)
 
-		w.Header().Add("Authorization", "Bearer "+t)
 		w.WriteHeader(http.StatusCreated)
 	})
 }

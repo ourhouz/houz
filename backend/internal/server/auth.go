@@ -1,4 +1,4 @@
-package auth
+package server
 
 import (
 	"context"
@@ -12,7 +12,8 @@ import (
 	"github.com/ourhouz/houz/internal/db"
 )
 
-func ExtractToken(next http.Handler) http.Handler {
+// extractToken is a middleware that parses then injects a JWT into r.Context()
+func extractToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), "auth", false)
 
@@ -22,15 +23,16 @@ func ExtractToken(next http.Handler) http.Handler {
 			return
 		}
 
-		user, house, err := VerifyUserJWT(token)
+		user, house, err := parseUserJWT(token)
 		if err != nil {
+			w.Header().Add("Authorization", "")
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
 		ctx = context.WithValue(r.Context(), "auth", true)
-		ctx = context.WithValue(ctx, "user", user)
-		ctx = context.WithValue(ctx, "house", house)
+		ctx = context.WithValue(ctx, "userRouter", user)
+		ctx = context.WithValue(ctx, "houseRouter", house)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -42,7 +44,8 @@ type claims struct {
 	jwt.RegisteredClaims
 }
 
-func CreateUserJWT(user db.User) (s string, err error) {
+// writeUserJWT creates then writes a JWT to the response header
+func writeUserJWT(w http.ResponseWriter, user db.User) {
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims{
 		user.HouseID,
 		user.Name,
@@ -53,12 +56,18 @@ func CreateUserJWT(user db.User) (s string, err error) {
 			Issuer:    "houz",
 		},
 	})
-	s, err = t.SignedString(config.Env.JWTKey)
+	s, err := t.SignedString(config.Env.JWTKey)
 
-	return
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Add("Authorization", "Bearer "+s)
 }
 
-func VerifyUserJWT(s string) (user db.User, house db.House, err error) {
+// parseUserJWT verifies then parses a JWT and returns the userRouter and houseRouter associated with it
+func parseUserJWT(s string) (user db.User, house db.House, err error) {
 	var c claims
 	_, err = jwt.ParseWithClaims(s, &c, func(t *jwt.Token) (interface{}, error) {
 		return config.Env.JWTKey, nil
@@ -68,10 +77,10 @@ func VerifyUserJWT(s string) (user db.User, house db.House, err error) {
 		return
 	}
 
-	// redundant, but might check for deleted house
+	// redundant, but might check for deleted houseRouter
 	result := db.Database.Where("id = ?", c.HouseId).First(&house)
 	if result.RowsAffected == 0 {
-		err = errors.New("house not found")
+		err = errors.New("houseRouter not found")
 		return
 	}
 
@@ -80,7 +89,7 @@ func VerifyUserJWT(s string) (user db.User, house db.House, err error) {
 		Name:    c.Name,
 	}).First(&user)
 	if result.RowsAffected == 0 {
-		err = errors.New("user not found")
+		err = errors.New("userRouter not found")
 		return
 	}
 
