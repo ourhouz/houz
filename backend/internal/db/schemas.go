@@ -49,16 +49,17 @@ type PayEntry struct {
 
 type PayItem struct {
 	Base
-	PayEntryID  uint    `json:"payEntryID"`
-	Name        string  `gorm:"size:100" json:"name"`
-	Description string  `gorm:"size:500" json:"description"`
-	CostPerUnit float32 `json:"costPerUnit"`
-	Quantity    float32 `json:"quantity"`
+	PayEntryID  uint         `json:"payEntryID"`
+	Name        string       `gorm:"size:100" json:"name"`
+	Description string       `gorm:"size:500" json:"description"`
+	CostPerUnit float32      `json:"costPerUnit"`
+	Quantity    float32      `json:"quantity"`
+	PayItemDues []PayItemDue `json:"payItemDues"`
 }
 
 type PayItemDue struct {
 	Base
 	PayItemID uint    `json:"payItemID"`
-	UserId    uint    `json:"userID"`
 	AmountDue float32 `json:"amountDue"`
+	UserId    uint    `json:"userID"` // many-to-one?
 }
