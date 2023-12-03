@@ -8,7 +8,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/ourhouz/houz/internal/db"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 func userRouter(r chi.Router) {
@@ -23,18 +22,8 @@ func userRouter(r chi.Router) {
 			return
 		}
 
-		if len(body.Name) == 0 {
-			err = errors.New("name cannot be empty")
-			return
-		}
-		if len(body.Name) > 72 {
-			// bcrypt limit
-			err = errors.New("name cannot be longer than 72 characters")
-			return
-		}
-
 		result := db.Database.Where("id = ?", body.HouseID).Take(&db.House{})
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		if result.RowsAffected == 0 {
 			err = errors.New("house with id " + strconv.Itoa(int(body.HouseID)) + " doesn't exist")
 			return
 		}
@@ -44,21 +33,20 @@ func userRouter(r chi.Router) {
 			HouseID: body.HouseID,
 			Name:    body.Name,
 		}).Take(&user)
-		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		if result.RowsAffected != 0 {
 			err = errors.New("user with name " + body.Name + " already exists")
 			return
 		}
 
-		hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
-		user = db.User{
-			Name:         body.Name,
-			PasswordHash: hash,
-			HouseID:      body.HouseID,
+		user, err = db.CreateUser(body.HouseID, body.Name, body.Password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
+
 		db.Database.Create(&user)
 
 		writeUserJWT(w, user)
-
 		w.WriteHeader(http.StatusCreated)
 	})
 
@@ -90,7 +78,6 @@ func userRouter(r chi.Router) {
 		}
 
 		writeUserJWT(w, user)
-
 		w.WriteHeader(http.StatusCreated)
 	})
 }

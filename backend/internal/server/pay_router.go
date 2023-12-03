@@ -80,9 +80,10 @@ func payRouter(r chi.Router) {
 			}
 
 			house := r.Context().Value("house").(db.House)
-			pp := db.PayPeriod{
-				HouseID:   house.ID,
-				StartTime: body.StartTime,
+			pp, err := db.CreatePayPeriod(house.ID, body.StartTime)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
 			}
 			house.PayPeriods = append(house.PayPeriods, pp)
 

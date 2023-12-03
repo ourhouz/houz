@@ -1,12 +1,10 @@
 package server
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/ourhouz/houz/internal/db"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // houseRouter is the router for the /house endpoint
@@ -54,24 +52,16 @@ func houseRouter(r chi.Router) {
 			return
 		}
 
-		if len(body.HouseName) == 0 {
-			err = errors.New("house name cannot be empty")
-			return
-		}
-		if len(body.HouseName) > 100 {
-			err = errors.New("house name cannot be longer than 100 characters")
+		house, err := db.CreateHouse(body.HouseName)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		house := db.House{
-			Name: body.HouseName,
-		}
-
-		hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
-		user := db.User{
-			Name:         body.Username,
-			PasswordHash: hash,
-			HouseID:      house.ID,
+		user, err := db.CreateUser(house.ID, body.Username, body.Password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
 		house.Owner = user
