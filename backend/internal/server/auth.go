@@ -12,8 +12,8 @@ import (
 	"github.com/ourhouz/houz/internal/db"
 )
 
-// extractToken is a middleware that parses then injects a JWT into r.Context()
-func extractToken(next http.Handler) http.Handler {
+// extractUserJWT is a middleware that parses then injects a JWT into r.Context()
+func extractUserJWT(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), "auth", false)
 
@@ -31,15 +31,15 @@ func extractToken(next http.Handler) http.Handler {
 		}
 
 		ctx = context.WithValue(r.Context(), "auth", true)
-		ctx = context.WithValue(ctx, "userRouter", user)
-		ctx = context.WithValue(ctx, "houseRouter", house)
+		ctx = context.WithValue(ctx, "user", user)
+		ctx = context.WithValue(ctx, "house", house)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 type claims struct {
-	HouseId uint   `json:"house_id"`
+	HouseID uint   `json:"houseID"`
 	Name    string `json:"name"`
 	jwt.RegisteredClaims
 }
@@ -66,7 +66,7 @@ func writeUserJWT(w http.ResponseWriter, user db.User) {
 	w.Header().Add("Authorization", "Bearer "+s)
 }
 
-// parseUserJWT verifies then parses a JWT and returns the userRouter and houseRouter associated with it
+// parseUserJWT verifies then parses a JWT and returns the user and house associated with it
 func parseUserJWT(s string) (user db.User, house db.House, err error) {
 	var c claims
 	_, err = jwt.ParseWithClaims(s, &c, func(t *jwt.Token) (interface{}, error) {
@@ -77,19 +77,19 @@ func parseUserJWT(s string) (user db.User, house db.House, err error) {
 		return
 	}
 
-	// redundant, but might check for deleted houseRouter
-	result := db.Database.Where("id = ?", c.HouseId).First(&house)
+	// redundant, but might check for deleted house
+	result := db.Database.Where("id = ?", c.HouseID).Take(&house)
 	if result.RowsAffected == 0 {
-		err = errors.New("houseRouter not found")
+		err = errors.New("house not found")
 		return
 	}
 
 	result = db.Database.Where(&db.User{
-		HouseID: c.HouseId,
+		HouseID: c.HouseID,
 		Name:    c.Name,
-	}).First(&user)
+	}).Take(&user)
 	if result.RowsAffected == 0 {
-		err = errors.New("userRouter not found")
+		err = errors.New("user not found")
 		return
 	}
 

@@ -29,7 +29,7 @@ func payRouter(r chi.Router) {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
-			if r.Context().Value("userRouter") == nil || r.Context().Value("houseRouter") == nil {
+			if r.Context().Value("user") == nil || r.Context().Value("house") == nil {
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
@@ -42,7 +42,7 @@ func payRouter(r chi.Router) {
 				return
 			}
 
-			house := r.Context().Value("houseRouter").(db.House)
+			house := r.Context().Value("house").(db.House)
 			pp := db.PayPeriod{
 				HouseID:   house.ID,
 				StartTime: body.StartTime,

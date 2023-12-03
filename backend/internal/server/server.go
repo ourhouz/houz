@@ -16,7 +16,7 @@ func Init() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(3 * time.Second))
 
-	r.Use(extractToken)
+	r.Use(extractUserJWT)
 
 	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		if _, err := w.Write([]byte("pong")); err != nil {
@@ -31,8 +31,9 @@ func Init() {
 		}
 	})
 
-	r.Route("/userRouter", userRouter)
-	r.Route("/houseRouter", houseRouter)
+	r.Route("/user", userRouter)
+	r.Route("/house", houseRouter)
+	r.Route("/pay", payRouter)
 
 	err := http.ListenAndServe(":"+config.Env.Port, r)
 	if err != nil {

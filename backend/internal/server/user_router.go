@@ -14,7 +14,7 @@ import (
 func userRouter(r chi.Router) {
 	r.Post("/create", func(w http.ResponseWriter, r *http.Request) {
 		body, err := parseBody[struct {
-			HouseId  uint   `json:"house_id"`
+			HouseID  uint   `json:"houseID"`
 			Name     string `json:"name"`
 			Password string `json:"password"`
 		}](r)
@@ -33,19 +33,19 @@ func userRouter(r chi.Router) {
 			return
 		}
 
-		result := db.Database.Where("id = ?", body.HouseId).Take(&db.House{})
+		result := db.Database.Where("id = ?", body.HouseID).Take(&db.House{})
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			err = errors.New("houseRouter with id " + strconv.Itoa(int(body.HouseId)) + " doesn't exist")
+			err = errors.New("house with id " + strconv.Itoa(int(body.HouseID)) + " doesn't exist")
 			return
 		}
 
 		var user db.User
 		result = db.Database.Where(&db.User{
-			HouseID: body.HouseId,
+			HouseID: body.HouseID,
 			Name:    body.Name,
 		}).Take(&user)
 		if !errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			err = errors.New("userRouter with name " + body.Name + " already exists")
+			err = errors.New("user with name " + body.Name + " already exists")
 			return
 		}
 
@@ -53,7 +53,7 @@ func userRouter(r chi.Router) {
 		user = db.User{
 			Name:         body.Name,
 			PasswordHash: hash,
-			HouseID:      body.HouseId,
+			HouseID:      body.HouseID,
 		}
 		db.Database.Create(&user)
 
@@ -64,7 +64,7 @@ func userRouter(r chi.Router) {
 
 	r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
 		body, err := parseBody[struct {
-			HouseId  uint   `json:"house_id"`
+			HouseID  uint   `json:"houseID"`
 			Name     string `json:"name"`
 			Password string `json:"password"`
 		}](r)
@@ -75,11 +75,11 @@ func userRouter(r chi.Router) {
 
 		var user db.User
 		result := db.Database.Where(&db.User{
-			HouseID: body.HouseId,
+			HouseID: body.HouseID,
 			Name:    body.Name,
-		}).First(&user)
+		}).Take(&user)
 		if result.RowsAffected == 0 {
-			http.Error(w, "userRouter doesn't exist", http.StatusBadRequest)
+			http.Error(w, "user doesn't exist", http.StatusBadRequest)
 			return
 		}
 

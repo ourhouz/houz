@@ -9,19 +9,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// houseRouter is the router for the /houseRouter endpoint
+// houseRouter is the router for the /house endpoint
 func houseRouter(r chi.Router) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Context().Value("auth") == false {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		if r.Context().Value("userRouter") == nil || r.Context().Value("houseRouter") == nil {
+		if r.Context().Value("user") == nil || r.Context().Value("house") == nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		house := r.Context().Value("houseRouter").(db.House)
+		house := r.Context().Value("house").(db.House)
 		err := db.Database.Select("id, name").Model(&house).Association("Owner").Find(&house.Owner)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -45,7 +45,7 @@ func houseRouter(r chi.Router) {
 
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 		body, err := parseBody[struct {
-			HouseName string `json:"house_name"`
+			HouseName string `json:"houseName"`
 			Username  string `json:"username"`
 			Password  string `json:"password"`
 		}](r)
@@ -55,11 +55,11 @@ func houseRouter(r chi.Router) {
 		}
 
 		if len(body.HouseName) == 0 {
-			err = errors.New("houseRouter name cannot be empty")
+			err = errors.New("house name cannot be empty")
 			return
 		}
 		if len(body.HouseName) > 100 {
-			err = errors.New("houseRouter name cannot be longer than 100 characters")
+			err = errors.New("house name cannot be longer than 100 characters")
 			return
 		}
 
