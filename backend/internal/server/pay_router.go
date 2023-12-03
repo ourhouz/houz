@@ -74,10 +74,6 @@ func payRouter(r chi.Router) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			if body.StartTime.IsZero() {
-				http.Error(w, "start time cannot be empty", http.StatusBadRequest)
-				return
-			}
 
 			house := r.Context().Value("house").(db.House)
 			pp, err := db.CreatePayPeriod(house.ID, body.StartTime)
